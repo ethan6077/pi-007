@@ -1,4 +1,4 @@
-package main
+package models
 
 type Form struct {
 	Name            string `json:"name"`
