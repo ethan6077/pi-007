@@ -10,7 +10,7 @@ import (
 	"github.com/ethan6077/pi-007/src/models"
 )
 
-func processPi(w http.ResponseWriter, r *http.Request) {
+func ProcessPi(w http.ResponseWriter, r *http.Request) {
 	println("Processing Pi")
 
 	missionId, uuidErr := uuid.NewRandom()
@@ -19,31 +19,28 @@ func processPi(w http.ResponseWriter, r *http.Request) {
 		panic(uuidErr)
 	}
 
-	form := models.Form{
-		Name:            "Vesper Lynd",
-		Phone:           "0482663672",
-		Email:           "vesper.lynd@gmail.com",
-		Content:         "I am very interested in this property. When can I inspect it?",
-		EnquiryCategory: "Inspection",
-		ListingId:       "listing77777",
-		AgentId:         "007",
-		AgencyID:        "MI6",
+	var payload models.Form
+	payloadError := json.NewDecoder(r.Body).Decode(&payload)
+	if payloadError != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		panic(payloadError)
 	}
+
+	encryptedForm := EncryptPiData(payload)
 
 	missionCard := models.MissionCard{
 		Status:         "Stealth",
 		PiDataDetected: true,
 		MissionId:      missionId,
-		MissionKey:     "007",
-		Body:           form,
+		Body:           encryptedForm,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	err := json.NewEncoder(w).Encode(missionCard)
+	jsonEncoderErr := json.NewEncoder(w).Encode(missionCard)
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if jsonEncoderErr != nil {
+		http.Error(w, jsonEncoderErr.Error(), http.StatusInternalServerError)
 	}
 
 }
